@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        #heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        #heading label {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        #heading button {
+            padding: 8px 15px;
+            background-color: #ff5c5c;
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        #heading button:hover {
+            background-color: #ff3b3b;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            grid-gap: 20px;
+        }
+
+        form {
+            display: flex;
+            align-items: center;
+        }
+
+        form label {
+            font-size: 18px;
+            margin-right: 10px;
+        }
+
+        select, input[type="text"] {
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            width: 100%;
+            max-width: 300px;
+            margin-right: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #5c6bc0;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #3f51b5;
+        }
+
+        #message {
+            margin-top: 20px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            height: 400px;
+            overflow-y: auto;
+        }
+
+        #displayMessage {
+            margin-bottom: 20px;
+        }
+
+        .message {
+            padding: 8px;
+            margin-bottom: 10px;
+            background-color: #eef1f7;
+            border-radius: 5px;
+            color: #333;
+        }
+
+        #typeMessage {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        #msgField {
+            width: 80%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="heading">
+            <label>Chat App</label>
+            <a href="/"><button>Leave Room</button></a>
+        </div>
+
+        <div class="grid-container">
+            <form action="/chat" id="roomForm">
+                <label>Select Room:</label>
+                <select id="roomName" name="room">
+                    <option value="devops">devops</option>
+                    <option value="cloud computing">cloud computing</option>
+                    <option value="covid19">covid19</option>
+                    <option value="sports">sports</option>
+                    <option value="nodeJS">nodeJS</option>
+                </select>
+                <button>Select</button>
+            </form>
+
+            <div id="message">
+                <div id="displayMessage"></div>
+
+                <div id="typeMessage">
+                    <form action="/chat" id="chatForm">
+                        <input id="msgField" name="from_user" type="text" placeholder="Type here" required>
+                        <button>Send</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const chatForm = document.getElementById('chatForm');
+        const roomForm = document.getElementById('roomForm');
+        const chat = io();
+
+        chat.on('message', msg => displayMessage(msg));
+        
+
+        chat.on('previousMessages', messages => {
+            console.log('Received previous messages:', messages);  
+            messages.forEach(msg => displayMessage(msg));  
+        });
+
+        roomForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const room = document.getElementById('roomName').value;
+            chat.emit('joinRoom', room);
+            displayMessage(`You are in '${room}' room`);
+        });
+
+        chatForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const text = event.target.elements.msgField.value;
+            chat.emit('chatMessage', text);
+            document.getElementById('msgField').value = "";
+        });
+
+
+        function displayMessage(msg) {
+            const div = document.createElement('div');
+            div.classList.add('message');
+            div.innerHTML = `<p>${msg}</p>`;
+            document.getElementById('displayMessage').appendChild(div);
+        }
+    </script>
+</body>
+</html>
